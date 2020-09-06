@@ -1,6 +1,25 @@
 <template>
     <div>
         <h2>Articles</h2>
+        <form @submit.prevent="addArticle" class="mb-3">
+            <div class="form-group">
+                <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Title"
+                    v-model="article.title"
+                />
+            </div>
+            <div class="form-group">
+                <textarea
+                    type="text"
+                    class="form-control"
+                    placeholder="Body"
+                    v-model="article.body"
+                ></textarea>
+            </div>
+            <button type="submit" class="btn btn-light btn-block">Save</button>
+        </form>
         <nav aria-label="Page navigation example">
             <ul class="pagination">
                 <li
@@ -40,6 +59,13 @@
         >
             <h3>{{ article.title }}</h3>
             <p>{{ article.body }}</p>
+            <hr />
+            <button @click="editArticle(article)" class="bt btn-warning mb-2">
+                Edit
+            </button>
+            <button @click="deleteArticle(article.id)" class="bt btn-danger">
+                Delete
+            </button>
         </div>
     </div>
 </template>
@@ -48,8 +74,8 @@
 export default {
     data() {
         return {
-            article: [],
-            articles: {
+            articles: [],
+            article: {
                 id: "",
                 title: "",
                 body: "",
@@ -86,6 +112,61 @@ export default {
             };
 
             this.pagination = pagination;
+        },
+        deleteArticle(id) {
+            if (confirm("Are you sure?")) {
+                fetch(`api/article/${id}`, { method: "delete" })
+                    .then((res) => res.json())
+                    .then((data) => {
+                        alert("Article Removed");
+                        this.fetchArticles();
+                    })
+                    .catch((err) => console.log(err));
+            }
+        },
+        addArticle() {
+            if (this.edit === false) {
+                // add
+                fetch("api/article", {
+                    method: "post",
+                    body: JSON.stringify(this.article),
+                    headers: {
+                        "content-type": "application/json",
+                    },
+                })
+                    .then((res) => res.json())
+                    .then((data) => {
+                        this.article.title = "";
+                        this.article.body = "";
+                        alert("Article Saved");
+                        this.fetchArticles();
+                    })
+                    .catch((err) => console.log(err));
+            } else {
+                // update
+                fetch("api/article", {
+                    method: "put",
+                    body: JSON.stringify(this.article),
+                    headers: {
+                        "content-type": "application/json",
+                    },
+                })
+                    .then((res) => res.json())
+                    .then((data) => {
+                        this.article.title = "";
+                        this.article.body = "";
+                        alert("Article Updated");
+                        this.fetchArticles();
+                    })
+                    .catch((err) => console.log(err));
+            }
+        },
+        editArticle(article) {
+            this.edit = true;
+            this.article.id = article.id;
+            this.article.article_id = article.id;
+            this.article.title = article.title;
+            this.article.body = article.body;
         },
     },
 };
